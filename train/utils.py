@@ -3,14 +3,14 @@
 import numpy as np
 from keras.utils.np_utils import to_categorical
 from keras.layers import Convolution2D, MaxPooling2D, GRU, TimeDistributed
-from keras.layers import Dense, Dropout, Activation, Flatten, RepeatVector
+from keras.layers import Dense, Dropout, Activation, Flatten, RepeatVector,Bidirectional
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
-from keras.optimizers import SGD
+
 from keras import backend as K
 K.set_image_dim_ordering("th")
 from config import *
-import json
+
 import random
 
 def load_data(split_ratio):
@@ -60,10 +60,41 @@ def create_simpleCnnRnn(image_shape, max_caption_len,vocab_size):
     # Note: Keras does automatic shape inference.
     image_model.add(Dense(128))
     image_model.add(RepeatVector(max_caption_len))
-    image_model.add(GRU(output_dim=128, return_sequences=True))
+    image_model.add(Bidirectional(GRU(output_dim=128, return_sequences=True)))
     #image_model.add(GRU(output_dim=128, return_sequences=True))
     image_model.add(TimeDistributed(Dense(vocab_size)))
     image_model.add(Activation('softmax'))
-    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
-    image_model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    return image_model
+
+
+from seq2seq.models import AttentionSeq2Seq, Seq2Seq
+def create_imgText(image_shape, max_caption_len,vocab_size):
+    image_model = Sequential()
+    # image_shape : C,W,H
+    # input: 100x100 images with 3 channels -> (3, 100, 100) tensors.
+    # this applies 32 convolution filters of size 3x3 each.
+    image_model.add(Convolution2D(32, 3, 3, border_mode='valid', input_shape=image_shape))
+    image_model.add(BatchNormalization())
+    image_model.add(Activation('relu'))
+    image_model.add(Convolution2D(32, 3, 3))
+    image_model.add(BatchNormalization())
+    image_model.add(Activation('relu'))
+    image_model.add(MaxPooling2D(pool_size=(2, 2)))
+    image_model.add(Dropout(0.25))
+    image_model.add(Convolution2D(64, 3, 3, border_mode='valid'))
+    image_model.add(BatchNormalization())
+    image_model.add(Activation('relu'))
+    image_model.add(Convolution2D(64, 3, 3))
+    image_model.add(BatchNormalization())
+    image_model.add(Activation('relu'))
+    image_model.add(MaxPooling2D(pool_size=(2, 2)))
+    image_model.add(Dropout(0.25))
+    image_model.add(Flatten())
+    # Note: Keras does automatic shape inference.
+    image_model.add(Dense(128))
+    image_model.add(RepeatVector(1))
+    #model = AttentionSeq2Seq(input_dim=128, input_length=1, hidden_dim=128, output_length=max_caption_len, output_dim=vocab_size)
+    model = Seq2Seq(input_dim=128, input_length=1, hidden_dim=128, output_length=max_caption_len,
+                             output_dim=vocab_size, peek=True)
+    image_model.add(model)
     return image_model

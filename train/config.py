@@ -7,5 +7,6 @@ max_caption_len = 8
 images_dir = "../data/images/pic"
 labels_dir = "../data/images/labels"
 ch_index_dir = "../data/images/ch_index"
+model_output = "../checkpoints/"
 ch_index = json.load(open(ch_index_dir))
 vocab_size = len(ch_index)
