@@ -55,7 +55,7 @@ train,train_label,val,val_label = load_data(split_ratio)
 
 val_acc_check_pointer = ValidateAcc(image_model,val,val_label,model_output)
 check_pointer = ModelCheckpoint(filepath=model_output + "weights.{epoch:02d}.hdf5")
-sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 image_model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 image_model.fit(train, train_label,
                 shuffle=True, batch_size=16, nb_epoch=20, validation_split=0.2, callbacks=[check_pointer, val_acc_check_pointer])

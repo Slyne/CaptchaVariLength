@@ -95,7 +95,8 @@ def create_imgText(image_shape, max_caption_len,vocab_size):
     image_model.add(RepeatVector(1))
     #model = AttentionSeq2Seq(input_dim=128, input_length=1, hidden_dim=128, output_length=max_caption_len, output_dim=vocab_size)
     model = Seq2Seq(input_dim=128, input_length=1, hidden_dim=128, output_length=max_caption_len,
-                             output_dim=vocab_size, peek=True)
+                             output_dim=128, peek=True)
     image_model.add(model)
-	image_model.add(Activation('softmax'))
+    image_model.add(TimeDistributed(Dense(vocab_size)))
+    image_model.add(Activation('softmax'))
     return image_model
